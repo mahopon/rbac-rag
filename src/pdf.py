@@ -8,7 +8,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 pdf_router = APIRouter(prefix="/pdf")
 
 
-@pdf_router.post("/upload")
+@pdf_router.post("")
 async def upload_pdf(file: UploadFile = File(...)):
     if not file.content_type or "application/pdf" not in file.content_type:
         raise HTTPException(status_code=400, detail="Uploaded file is not a PDF.")
@@ -24,6 +24,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     temp_path = Path(tempfile.gettempdir()) / f"uploaded_{file.filename}"
     temp_path.write_bytes(file_bytes)
     
-    pages = asyncio.to_thread(parse_pdf, str(temp_path))
+    pages = await asyncio.to_thread(parse_pdf, str(temp_path))
+    
 
     return {"filename": file.filename, "path": str(temp_path), "size_bytes": len(file_bytes)}

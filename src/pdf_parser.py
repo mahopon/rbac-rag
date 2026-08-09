@@ -1,8 +1,8 @@
-import fitz
+import pymupdf
 
 
 def parse_pdf(file_path: str) -> list[str]:
-    doc = fitz.open(file_path)
+    doc = pymupdf.open(file_path)
     pages = []
     for page in doc:
         text = page.get_text()
