@@ -25,12 +25,18 @@ def init_db():
 
 
 def get_user_by_id(user_id):
+    from src.user import User
+
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    user = cursor.fetchone()
+    row = cursor.fetchone()
     conn.close()
-    return user
+
+    if row is None:
+        return None
+
+    return User(id=row["id"], name=row["name"], role=row["role"])
 
 
 def seed_db():
