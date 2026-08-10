@@ -5,10 +5,12 @@ import asyncio
 import uuid
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
-from src.db import add_document
+from pydantic import BaseModel
 
+from src.db import add_document
 from src.vectorstore import add_documents_to_faiss
 from src.chunker import chunk_document
+from src.pdf_query import app
 
 UPLOAD_DIR = Path(__file__).parent.parent / "uploads"
 
@@ -51,3 +53,18 @@ async def upload_pdf(file: UploadFile = File(...), is_viewer: str = Form(default
         raise HTTPException(status_code=500, detail=f"PDF parsing failed: {e}")
 
     return {"filename": file.filename, "path": str(stored_path), "size_bytes": len(file_bytes)}
+
+
+class QueryDocRequest(BaseModel):
+    query: str
+    id: str
+    user_id: str
+
+
+@pdf_router.post("/query-doc")
+async def query_document(req: QueryDocRequest):
+    if not req.query or not req.id or not req.user_id:
+        raise HTTPException(status_code=400, detail="Both 'query', 'id' and 'user_id' must be non-empty.")
+    reply = app.invoke({"system_instruction": "For basic information like name, email, etc, reply with only the required information. Else, reply with more elaboration.", "query": req.query}, config={"configurable": {"thread_id": uuid.uuid4()}}) # type: ignore
+    print(reply["answer"].content)
+    return {"query": req.query, "id": req.id, "user_id": req.user_id, "response": reply["answer"].content}

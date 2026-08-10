@@ -14,6 +14,13 @@
             margin: 0;
             background: #f5f5f5;
         }
+        .app-container {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 2rem;
+        }
         .container {
             background: white;
             padding: 2rem;
@@ -41,18 +48,37 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>PDF Parser</h1>
-        <form id="pdfForm">
-            <label for="pdfFile">Select PDF file:</label>
-            <input type="file" id="pdfFile" accept=".pdf" required />
-            <div>
-                <label for="docType">Document Type:</label><br/>
-                <input type="checkbox" id="docType" /> Viewer mode
-            </div>
-            <button type="submit" id="submitBtn">Upload &amp; Parse</button>
-        </form>
-        <div id="status"></div>
+    <div class="app-container">
+        <div class="container">
+            <h1>PDF Parser</h1>
+            <form id="pdfForm">
+                <label for="pdfFile">Select PDF file:</label>
+                <input type="file" id="pdfFile" accept=".pdf" required />
+                <div>
+                    <label for="docType">Document Type:</label><br/>
+                    <input type="checkbox" id="docType" /> Viewer mode
+                </div>
+                <button type="submit" id="submitBtn">Upload &amp; Parse</button>
+            </form>
+            <div id="status"></div>
+        </div>
+
+        <div class="container">
+            <h1>Document Query</h1>
+            <form id="queryForm">
+                <label for="userIdInput">User ID:</label>
+                <input type="text" id="userIdInput" required />
+
+                <label for="queryInput">Query:</label>
+                <input type="text" id="queryInput" required />
+
+                <label for="idInput">ID:</label>
+                <input type="text" id="idInput" required />
+
+                <button type="submit" id="querySubmitBtn">Submit</button>
+            </form>
+            <div id="queryStatus"></div>
+        </div>
     </div>
 
     <script>
@@ -94,6 +120,47 @@
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Upload &amp; Parse';
+            }
+        });
+
+        const queryForm = document.getElementById('queryForm');
+        const querySubmitBtn = document.getElementById('querySubmitBtn');
+        const queryStatusDiv = document.getElementById('queryStatus');
+        const queryEndpoint = 'http://localhost:8000/pdf/query-doc';
+
+        queryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = document.getElementById('queryInput').value;
+            const id = document.getElementById('idInput').value;
+            const userId = document.getElementById('userIdInput').value;
+
+            if (!query || !id || !userId) {
+                queryStatusDiv.textContent = 'Query, ID and User ID are required.';
+                return;
+            }
+
+            querySubmitBtn.disabled = true;
+            querySubmitBtn.textContent = 'Submitting...';
+            queryStatusDiv.textContent = '';
+
+            try {
+                const response = await fetch(queryEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, id, user_id: userId }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                queryStatusDiv.textContent = JSON.stringify(result, null, 2);
+            } catch (err) {
+                queryStatusDiv.textContent = `Error: ${err.message}`;
+            } finally {
+                querySubmitBtn.disabled = false;
+                querySubmitBtn.textContent = 'Submit';
             }
         });
     </script>
