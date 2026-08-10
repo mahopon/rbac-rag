@@ -10,26 +10,24 @@ from langchain_community.docstore.in_memory import InMemoryDocstore
 
 FAISS_INDEX_PATH: str = str(Path(__file__).parent / "faiss_index")
 
-vectorstore: Optional[FAISS] = None
-
-
-def cold_start_faiss() -> None:
-  global vectorstore
-  if os.path.isdir(FAISS_INDEX_PATH):
-      vectorstore = FAISS.load_local(
-          folder_path=FAISS_INDEX_PATH,
-          embeddings=embeddings,
-          allow_dangerous_deserialization=True,
-      )
-  else:
-        dim = len(embeddings.embed_query(""))
-        vectorstore = FAISS(
-            embedding_function=embeddings,
-            index=faiss.IndexFlatL2(dim),
-            docstore=InMemoryDocstore(),
-            index_to_docstore_id={},
+def _init_vectorstore() -> FAISS:
+    if os.path.isdir(FAISS_INDEX_PATH):
+        return FAISS.load_local(
+            folder_path=FAISS_INDEX_PATH,
+            embeddings=embeddings,
+            allow_dangerous_deserialization=True,
         )
-        vectorstore.save_local(FAISS_INDEX_PATH)
+    dim = len(embeddings.embed_query(""))
+    vs = FAISS(
+        embedding_function=embeddings,
+        index=faiss.IndexFlatL2(dim),
+        docstore=InMemoryDocstore(),
+        index_to_docstore_id={},
+    )
+    vs.save_local(FAISS_INDEX_PATH)
+    return vs
+
+vectorstore = _init_vectorstore()
 
 
 def get_vectorstore() -> Optional[FAISS]:
@@ -49,7 +47,6 @@ def add_documents_to_faiss(docs: list[Document]) -> FAISS:
 
 
 def inspect_faiss() -> dict:
-    cold_start_faiss()
     vs = get_vectorstore()
     info = {
         "num_vectors": vs.index.ntotal,
