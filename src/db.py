@@ -21,6 +21,14 @@ def init_db():
             role TEXT NOT NULL
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS documents (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            path TEXT NOT NULL,
+            privileged BOOLEAN NOT NULL DEFAULT 0
+        )
+    """)
     conn.commit()
 
 
@@ -37,6 +45,17 @@ def get_user_by_id(user_id):
         return None
 
     return User(id=row["id"], name=row["name"], role=row["role"])
+
+
+def add_document(name: str, path: str, privileged: bool = False):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO documents (name, path, privileged) VALUES (?, ?, ?)",
+        (name, path, privileged),
+    )
+    conn.commit()
+    conn.close()
 
 
 def seed_db():
