@@ -5,12 +5,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from src.router import router
+from src.vectorstore import cold_start_faiss
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     upload_dir = os.path.join(os.path.dirname(__file__), "..", "uploads")
     os.makedirs(upload_dir, exist_ok=True)
+    cold_start_faiss()
     yield
     # Shutdown logic here
 
