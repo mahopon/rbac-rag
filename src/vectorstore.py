@@ -36,9 +36,9 @@ def get_vectorstore() -> Optional[FAISS]:
   return vectorstore
 
 
-def add_documents_to_faiss(docs: list[Document]) -> Optional[FAISS]:
+def add_documents_to_faiss(docs: list[Document]) -> FAISS:
   if len(docs) == 0:
-      return None
+    raise RuntimeError("FAISS db not started")
   global vectorstore
   if vectorstore is not None:
     vectorstore.add_documents(docs)
