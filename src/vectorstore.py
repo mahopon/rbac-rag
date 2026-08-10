@@ -48,6 +48,30 @@ def add_documents_to_faiss(docs: list[Document]) -> FAISS:
   return vectorstore
 
 
+def inspect_faiss() -> dict:
+    cold_start_faiss()
+    vs = get_vectorstore()
+    info = {
+        "num_vectors": vs.index.ntotal,
+        "index_dimension": vs.index.d,
+    }
+    doc_count = len(vs.docstore._dict)
+    info["num_documents"] = doc_count
+    if doc_count > 0:
+        sample_ids = list(vs.docstore._dict.keys())[:5]
+        samples = {}
+        for doc_id in sample_ids:
+            doc = vs.docstore._dict[doc_id]
+            content_preview = doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content
+            metadata_preview = {k: v for k, v in doc.metadata.items()}
+            samples[str(doc_id)] = {
+                "content": content_preview,
+                "metadata": metadata_preview,
+            }
+        info["sample_documents"] = samples
+    return info
+
+
 def create_vectorstore(docs: list[Document]) -> FAISS:
   return FAISS.from_documents(docs, embeddings)
 
