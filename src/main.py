@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +9,8 @@ from src.router import router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup logic here
+    upload_dir = os.path.join(os.path.dirname(__file__), "..", "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
     yield
     # Shutdown logic here
 
