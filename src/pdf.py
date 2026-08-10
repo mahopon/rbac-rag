@@ -7,6 +7,9 @@ import uuid
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from src.db import add_document
 
+from src.vectorstore import add_documents_to_faiss
+from src.chunker import chunk_document
+
 UPLOAD_DIR = Path(__file__).parent.parent / "uploads"
 
 pdf_router = APIRouter(prefix="/pdf")
@@ -39,7 +42,9 @@ async def upload_pdf(file: UploadFile = File(...), is_viewer: str = Form(default
     try:
         pages = await asyncio.to_thread(parse_pdf, str(stored_path))
         privileged = is_viewer == "viewer"
-        add_document(safe_filename, str(stored_path), privileged=privileged)
+        chunked_docs = chunk_document(pages)
+        add_documents_to_faiss(docs=chunked_docs)
+        add_document(safe_filename, str(stored_path), privileged=privileged, chunked=True)
     except Exception as e:
         print(e)
         stored_path.unlink(missing_ok=True)
