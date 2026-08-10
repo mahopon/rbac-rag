@@ -10,3 +10,5 @@ wheels/
 .venv
 
 **/faiss_index
+**/*.db
+**/uploads
