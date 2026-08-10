@@ -4,7 +4,7 @@ from src.pdf_parser import parse_pdf
 import asyncio
 import uuid
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from src.db import add_document
 
 UPLOAD_DIR = Path(__file__).parent.parent / "uploads"
@@ -15,7 +15,7 @@ upload_dir = UPLOAD_DIR / "pdf"
 upload_dir.mkdir(parents=True, exist_ok=True)
 
 @pdf_router.post("")
-async def upload_pdf(file: UploadFile = File(...)):
+async def upload_pdf(file: UploadFile = File(...), is_viewer: str = Form(default="non-viewer")):
     if not file.content_type or "application/pdf" not in file.content_type:
         raise HTTPException(status_code=400, detail="Uploaded file is not a PDF.")
 
@@ -38,7 +38,8 @@ async def upload_pdf(file: UploadFile = File(...)):
 
     try:
         pages = await asyncio.to_thread(parse_pdf, str(stored_path))
-        add_document(safe_filename, str(stored_path), privileged=True)
+        privileged = is_viewer == "viewer"
+        add_document(safe_filename, str(stored_path), privileged=privileged)
     except Exception as e:
         print(e)
         stored_path.unlink(missing_ok=True)

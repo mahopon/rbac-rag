@@ -46,6 +46,10 @@
         <form id="pdfForm">
             <label for="pdfFile">Select PDF file:</label>
             <input type="file" id="pdfFile" accept=".pdf" required />
+            <div>
+                <label for="docType">Document Type:</label><br/>
+                <input type="checkbox" id="docType" /> Viewer mode
+            </div>
             <button type="submit" id="submitBtn">Upload &amp; Parse</button>
         </form>
         <div id="status"></div>
@@ -56,6 +60,7 @@
         const fileInput = document.getElementById('pdfFile');
         const submitBtn = document.getElementById('submitBtn');
         const statusDiv = document.getElementById('status');
+        const docTypeCheckbox = document.getElementById('docType');
         const ENDPOINT = 'http://localhost:8000/pdf';  // <-- change to your endpoint
 
         form.addEventListener('submit', async (e) => {
@@ -69,6 +74,7 @@
 
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('is_viewer', docTypeCheckbox.checked ? 'viewer' : 'non-viewer');
 
             try {
                 const response = await fetch(ENDPOINT, {
